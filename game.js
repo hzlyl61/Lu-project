@@ -257,14 +257,22 @@ function draw() {
         ctx.stroke();
     }
 
-    // 绘制蛇
+    // 绘制蛇 - 七彩颜色
     snake.forEach((segment, index) => {
-        // 蛇头用不同颜色
-        if (index === 0) {
-            ctx.fillStyle = '#4ade80';
-        } else {
-            ctx.fillStyle = '#22c55e';
-        }
+        // 彩虹色数组
+        const rainbowColors = [
+            '#FF0000', // 红
+            '#FF7F00', // 橙
+            '#FFFF00', // 黄
+            '#00FF00', // 绿
+            '#00FFFF', // 青
+            '#0000FF', // 蓝
+            '#8B00FF'  // 紫
+        ];
+
+        // 根据索引选择颜色，循环使用彩虹色
+        const colorIndex = index % rainbowColors.length;
+        ctx.fillStyle = rainbowColors[colorIndex];
 
         ctx.fillRect(
             segment.x * GRID_SIZE + 1,
@@ -273,16 +281,14 @@ function draw() {
             GRID_SIZE - 2
         );
 
-        // 添加光泽效果
-        if (index === 0) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.fillRect(
-                segment.x * GRID_SIZE + 2,
-                segment.y * GRID_SIZE + 2,
-                GRID_SIZE / 2,
-                GRID_SIZE / 2
-            );
-        }
+        // 添加光泽效果 - 所有节都有光泽
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fillRect(
+            segment.x * GRID_SIZE + 2,
+            segment.y * GRID_SIZE + 2,
+            GRID_SIZE / 2,
+            GRID_SIZE / 2
+        );
     });
 
     // 绘制食物
