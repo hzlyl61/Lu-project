@@ -236,6 +236,21 @@ function generateFood() {
     }
 }
 
+// 辅助函数：绘制圆角矩形
+function roundRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+}
+
 // 绘制游戏
 function draw() {
     // 清空画布
@@ -257,59 +272,220 @@ function draw() {
         ctx.stroke();
     }
 
-    // 绘制蛇 - 七彩颜色
+    // 绘制蛇 - 七彩颜色，带3D立体效果
     snake.forEach((segment, index) => {
         // 彩虹色数组
         const rainbowColors = [
-            '#FF0000', // 红
-            '#FF7F00', // 橙
-            '#FFFF00', // 黄
-            '#00FF00', // 绿
-            '#00FFFF', // 青
-            '#0000FF', // 蓝
-            '#8B00FF'  // 紫
+            { main: '#FF0000', light: '#FF6666', dark: '#CC0000' }, // 红
+            { main: '#FF7F00', light: '#FFB366', dark: '#CC6600' }, // 橙
+            { main: '#FFFF00', light: '#FFFF66', dark: '#CCCC00' }, // 黄
+            { main: '#00FF00', light: '#66FF66', dark: '#00CC00' }, // 绿
+            { main: '#00FFFF', light: '#66FFFF', dark: '#00CCCC' }, // 青
+            { main: '#0000FF', light: '#6666FF', dark: '#0000CC' }, // 蓝
+            { main: '#8B00FF', light: '#B366FF', dark: '#6600CC' }  // 紫
         ];
 
         // 根据索引选择颜色，循环使用彩虹色
         const colorIndex = index % rainbowColors.length;
-        ctx.fillStyle = rainbowColors[colorIndex];
+        const colors = rainbowColors[colorIndex];
 
-        ctx.fillRect(
-            segment.x * GRID_SIZE + 1,
-            segment.y * GRID_SIZE + 1,
-            GRID_SIZE - 2,
-            GRID_SIZE - 2
-        );
+        const x = segment.x * GRID_SIZE + 2;
+        const y = segment.y * GRID_SIZE + 2;
+        const size = GRID_SIZE - 4;
+        const radius = size / 3; // 圆角半径
 
-        // 添加光泽效果 - 所有节都有光泽
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillRect(
-            segment.x * GRID_SIZE + 2,
-            segment.y * GRID_SIZE + 2,
-            GRID_SIZE / 2,
-            GRID_SIZE / 2
+        // 绘制阴影效果
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        roundRect(ctx, x + 2, y + 2, size, size, radius);
+        ctx.fill();
+
+        // 绘制主体 - 使用径向渐变实现3D球形效果
+        const gradient = ctx.createRadialGradient(
+            x + size * 0.35,
+            y + size * 0.35,
+            size * 0.1,
+            x + size / 2,
+            y + size / 2,
+            size * 0.7
         );
+        gradient.addColorStop(0, colors.light);
+        gradient.addColorStop(0.4, colors.main);
+        gradient.addColorStop(1, colors.dark);
+
+        ctx.fillStyle = gradient;
+        roundRect(ctx, x, y, size, size, radius);
+        ctx.fill();
+
+        // 添加高光效果
+        const highlight = ctx.createRadialGradient(
+            x + size * 0.3,
+            y + size * 0.3,
+            0,
+            x + size * 0.3,
+            y + size * 0.3,
+            size * 0.4
+        );
+        highlight.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        highlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+        highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.fillStyle = highlight;
+        ctx.beginPath();
+        ctx.arc(
+            x + size * 0.35,
+            y + size * 0.35,
+            size * 0.25,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        // 蛇头添加眼睛
+        if (index === 0) {
+            // 根据移动方向确定眼睛位置
+            let eyeOffsetX = 0;
+            let eyeOffsetY = 0;
+
+            if (dx > 0) { // 向右
+                eyeOffsetX = size * 0.5;
+                eyeOffsetY = size * 0.3;
+            } else if (dx < 0) { // 向左
+                eyeOffsetX = -size * 0.2;
+                eyeOffsetY = size * 0.3;
+            } else if (dy > 0) { // 向下
+                eyeOffsetX = size * 0.3;
+                eyeOffsetY = size * 0.5;
+            } else if (dy < 0) { // 向上
+                eyeOffsetX = size * 0.3;
+                eyeOffsetY = -size * 0.2;
+            }
+
+            // 绘制两只眼睛
+            const eyeSize = size * 0.12;
+            const eyeSpacing = size * 0.3;
+
+            // 左眼
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath();
+            ctx.arc(
+                x + size / 2 + eyeOffsetX - eyeSpacing / 2,
+                y + size / 2 + eyeOffsetY,
+                eyeSize,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(
+                x + size / 2 + eyeOffsetX - eyeSpacing / 2,
+                y + size / 2 + eyeOffsetY,
+                eyeSize * 0.6,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+
+            // 右眼
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath();
+            ctx.arc(
+                x + size / 2 + eyeOffsetX + eyeSpacing / 2,
+                y + size / 2 + eyeOffsetY,
+                eyeSize,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(
+                x + size / 2 + eyeOffsetX + eyeSpacing / 2,
+                y + size / 2 + eyeOffsetY,
+                eyeSize * 0.6,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
     });
 
-    // 绘制食物
-    ctx.fillStyle = '#ef4444';
+    // 绘制食物 - 3D立体效果的苹果
+    const foodX = food.x * GRID_SIZE + GRID_SIZE / 2;
+    const foodY = food.y * GRID_SIZE + GRID_SIZE / 2;
+    const foodRadius = GRID_SIZE / 2 - 3;
+
+    // 绘制阴影
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(foodX + 2, foodY + foodRadius - 1, foodRadius * 0.8, foodRadius * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 绘制苹果主体 - 径向渐变
+    const foodGradient = ctx.createRadialGradient(
+        foodX - foodRadius * 0.3,
+        foodY - foodRadius * 0.3,
+        foodRadius * 0.2,
+        foodX,
+        foodY,
+        foodRadius
+    );
+    foodGradient.addColorStop(0, '#ff6b6b');
+    foodGradient.addColorStop(0.5, '#ff4444');
+    foodGradient.addColorStop(1, '#cc0000');
+
+    ctx.fillStyle = foodGradient;
+    ctx.beginPath();
+    ctx.arc(foodX, foodY, foodRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 绘制高光
+    const highlightGradient = ctx.createRadialGradient(
+        foodX - foodRadius * 0.4,
+        foodY - foodRadius * 0.4,
+        0,
+        foodX - foodRadius * 0.4,
+        foodY - foodRadius * 0.4,
+        foodRadius * 0.5
+    );
+    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = highlightGradient;
     ctx.beginPath();
     ctx.arc(
-        food.x * GRID_SIZE + GRID_SIZE / 2,
-        food.y * GRID_SIZE + GRID_SIZE / 2,
-        GRID_SIZE / 2 - 2,
+        foodX - foodRadius * 0.3,
+        foodY - foodRadius * 0.3,
+        foodRadius * 0.4,
         0,
         Math.PI * 2
     );
     ctx.fill();
 
-    // 食物高光
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    // 绘制苹果叶子
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.ellipse(
+        foodX + foodRadius * 0.2,
+        foodY - foodRadius * 0.9,
+        foodRadius * 0.3,
+        foodRadius * 0.5,
+        Math.PI / 6,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+
+    // 叶子高光
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.beginPath();
     ctx.arc(
-        food.x * GRID_SIZE + GRID_SIZE / 2 - 3,
-        food.y * GRID_SIZE + GRID_SIZE / 2 - 3,
-        3,
+        foodX + foodRadius * 0.1,
+        foodY - foodRadius * 0.95,
+        foodRadius * 0.15,
         0,
         Math.PI * 2
     );

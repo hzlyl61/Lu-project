@@ -24,10 +24,15 @@ body {
 }
 
 h1 {
-    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 20px;
     font-size: 2.5em;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    letter-spacing: 2px;
 }
 
 .game-info {
@@ -51,12 +56,15 @@ h1 {
 }
 
 #gameCanvas {
-    border: 3px solid #333;
-    border-radius: 10px;
-    background: #000;
+    border: 5px solid #333;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     display: block;
     margin: 0 auto;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(255, 255, 255, 0.05),
+        0 0 40px rgba(102, 126, 234, 0.3);
 }
 
 .controls {
